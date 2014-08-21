@@ -1,0 +1,25 @@
+diff --git a/am_adp/am_av/aml/aml.c b/am_adp/am_av/aml/aml.c
+index 31a1936..3697c97 100755
+--- a/am_adp/am_av/aml/aml.c
++++ b/am_adp/am_av/aml/aml.c
+@@ -3559,6 +3559,7 @@ static void* aml_av_monitor_thread(void *arg)
+ 	struct timespec rt;
+ 	char buf[32];
+ 	int fd,cntl_fd;
++	int stop_dur_limit;
+ 
+ 	property_set("sys.amplayer.drop_pcm", "1");
+ 	AM_FileEcho(VID_BLACKOUT_FILE, "0");
+@@ -3909,9 +3910,10 @@ static void* aml_av_monitor_thread(void *arg)
+ 			AM_DEBUG(1, "video data resumed");
+ 		}
+ 
++		stop_dur_limit =  AM_ABS(last_dmx_vpts - last_dmx_apts)/90000*1000 + NO_DATA_CHECK_TIME;
+ 		need_replay = AM_FALSE;
+-		if(/*(!no_audio_data && adec_start && !av_paused && (dmx_apts_stop_dur == 0) && (apts_stop_dur > NO_DATA_CHECK_TIME)) ||*/
+-				(!no_video_data && !av_paused && (dmx_vpts_stop_dur == 0) && (vpts_stop_dur > NO_DATA_CHECK_TIME)))
++		if(/*(!no_audio_data && adec_start && !av_paused && (dmx_apts_stop_dur == 0) && (apts_stop_dur > stop_dur_limit)) ||*/
++				(!no_video_data && !av_paused && (dmx_vpts_stop_dur == 0) && (vpts_stop_dur > stop_dur_limit)))
+ 			need_replay = AM_TRUE;
+ 		if(vbuf_level * 6 > vbuf_size * 5)
+ 			need_replay = AM_TRUE;

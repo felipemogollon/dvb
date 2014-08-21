@@ -1,0 +1,31 @@
+diff --git a/hdiapi/ci/ci_api.cpp b/hdiapi/ci/ci_api.cpp
+index 1af41f8..9819aef 100755
+--- a/hdiapi/ci/ci_api.cpp
++++ b/hdiapi/ci/ci_api.cpp
+@@ -137,9 +137,9 @@ TAPI_S8 Tapi_Ci_TsBypass(TAPI_U8 enable) {
+     pthread_mutex_lock(&ci_lock);
+     iDemoType = Demod_Get_Type();
+     if (E_DEVICE_DEMOD_DTMB == iDemoType) {
+-        ret1 = AM_DMX_SetSource(DTV_DMX_DEV_NO, AM_DMX_SRC_TS1);
+-        ret2 = AM_AV_SetTSSource(DTV_AV_DEV_NO, AM_AV_TS_SRC_TS1);
+-
++        //ret1 = AM_DMX_SetSource(DTV_DMX_DEV_NO, AM_DMX_SRC_TS1);
++        //ret2 = AM_AV_SetTSSource(DTV_AV_DEV_NO, AM_AV_TS_SRC_TS1);
++        ret1 = AM_DMX_SetSource(DTV_DMX_DEV_NO, AM_DMX_SRC_TS0);
+     } else if (E_DEVICE_DEMOD_DVB_C == iDemoType) {
+         if (enable) {
+             AM_FileEcho("/sys/class/stb/tso_source", "ts2");
+diff --git a/hdiapi/demux/demux_core.cpp b/hdiapi/demux/demux_core.cpp
+index cede28b..c081f1d 100755
+--- a/hdiapi/demux/demux_core.cpp
++++ b/hdiapi/demux/demux_core.cpp
+@@ -557,7 +557,8 @@ int am_demux_init(void) {
+         EN_DEVICE_DEMOD_TYPE EDemodType = E_DEVICE_DEMOD_NULL;
+         EDemodType = Demod_Get_Type();
+         if (E_DEVICE_DEMOD_DTMB == EDemodType) {
+-            AM_DMX_SetSource(DMX_DEV_NO, AM_DMX_SRC_TS1);
++            //AM_DMX_SetSource(DMX_DEV_NO, AM_DMX_SRC_TS1);
++            AM_DMX_SetSource(DMX_DEV_NO, AM_DMX_SRC_TS0);
+         } else if (E_DEVICE_DEMOD_DVB_C == EDemodType) {
+             AM_DMX_SetSource(DMX_DEV_NO, AM_DMX_SRC_TS2);
+         }

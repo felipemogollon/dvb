@@ -1,0 +1,110 @@
+diff --git a/am_adp/am_fend/am_fend.c b/am_adp/am_fend/am_fend.c
+index b0ea2c5..621ef12 100755
+--- a/am_adp/am_fend/am_fend.c
++++ b/am_adp/am_fend/am_fend.c
+@@ -1747,3 +1747,33 @@ AM_ErrorCode_t AM_FEND_SetCvbsAmpOut(int dev_no, unsigned int amp)
+ }
+ 
+ 
++/**\brief 模拟get atv status
++ *\param dev_no 前端设备号
++ *\param atv_status ，单位为atv_status_t
++ * \return
++ *   - AM_SUCCESS 成功
++ *   - 其他值 错误代码(见am_fend.h)
++ */
++AM_ErrorCode_t AM_FEND_GetAtvStatus(int dev_no,  atv_status_t *atv_status)
++{
++	AM_FEND_Device_t *dev = NULL;
++	AM_ErrorCode_t ret = AM_SUCCESS;
++
++	AM_TRY(fend_get_openned_dev(dev_no, &dev));
++
++	if(!dev->drv->get_atv_status)
++	{
++		AM_DEBUG(1, "fronend %d no not support get atv status", dev_no);
++		return AM_FEND_ERR_NOT_SUPPORTED;
++	}
++
++	pthread_mutex_lock(&dev->lock);
++	ret = dev->drv->get_atv_status(dev, atv_status);
++	pthread_mutex_unlock(&dev->lock);
++
++	return ret;
++}
++
++
++
++
+diff --git a/am_adp/am_fend/am_fend_internal.h b/am_adp/am_fend/am_fend_internal.h
+index 4a79ab8..dd63fc0 100755
+--- a/am_adp/am_fend/am_fend_internal.h
++++ b/am_adp/am_fend/am_fend_internal.h
+@@ -66,7 +66,7 @@ typedef struct
+ 	AM_ErrorCode_t (*blindscan_cancel)(AM_FEND_Device_t *dev);
+ 	AM_ErrorCode_t (*fine_tune)(AM_FEND_Device_t *dev, unsigned int freq);
+     AM_ErrorCode_t (*set_cvbs_amp_out)(AM_FEND_Device_t *dev, tuner_param_t *tuner_para);
+-    
++    AM_ErrorCode_t (*get_atv_status)(AM_FEND_Device_t *dev, atv_status_t *atv_status);
+     
+ } AM_FEND_Driver_t;
+ 
+diff --git a/am_adp/am_fend/linux_dvb/linux_dvb.c b/am_adp/am_fend/linux_dvb/linux_dvb.c
+index 34aa77e..594b571 100644
+--- a/am_adp/am_fend/linux_dvb/linux_dvb.c
++++ b/am_adp/am_fend/linux_dvb/linux_dvb.c
+@@ -63,6 +63,7 @@ static AM_ErrorCode_t dvbsx_blindscan_getscanevent(AM_FEND_Device_t *dev, struct
+ static AM_ErrorCode_t dvbsx_blindscan_cancel(AM_FEND_Device_t *dev);
+ static AM_ErrorCode_t dvb_fine_tune(AM_FEND_Device_t *dev, unsigned int freq);
+ static AM_ErrorCode_t dvb_set_cvbs_amp_out(AM_FEND_Device_t *dev, tuner_param_t *tuner_para);
++static AM_ErrorCode_t dvb_get_atv_status(AM_FEND_Device_t *dev, atv_status_t *atv_status);
+ 
+ /****************************************************************************
+  * Static data
+@@ -95,7 +96,8 @@ const AM_FEND_Driver_t linux_dvb_fend_drv =
+ .blindscan_getscanevent = dvbsx_blindscan_getscanevent,
+ .blindscan_cancel = dvbsx_blindscan_cancel,
+ .fine_tune = dvb_fine_tune,
+-.set_cvbs_amp_out = dvb_set_cvbs_amp_out
++.set_cvbs_amp_out = dvb_set_cvbs_amp_out,
++.get_atv_status =dvb_get_atv_status
+ };
+ 
+ /****************************************************************************
+@@ -482,4 +484,16 @@ static AM_ErrorCode_t dvb_set_cvbs_amp_out(AM_FEND_Device_t *dev, tuner_param_t
+ 	return AM_SUCCESS;
+ }
+ 
++static AM_ErrorCode_t dvb_get_atv_status(AM_FEND_Device_t *dev, atv_status_t *atv_status)
++{
++	int fd = (int)dev->drv_data;
++	if(ioctl(fd, FE_READ_ANALOG_STATUS, atv_status)==-1)
++	{
++		AM_DEBUG(1, "ioctl FE_READ_ANALOG_STATUS failed, errno: %s", strerror(errno));
++		return AM_FAILURE;
++	}
++
++	return AM_SUCCESS;
++}
++
+ 
+diff --git a/include/am_adp/am_fend.h b/include/am_adp/am_fend.h
+index b5d094c..d31f231 100755
+--- a/include/am_adp/am_fend.h
++++ b/include/am_adp/am_fend.h
+@@ -389,6 +389,15 @@ extern AM_ErrorCode_t AM_FEND_FineTune(int dev_no, unsigned int freq);
+  */
+ extern AM_ErrorCode_t AM_FEND_SetCvbsAmpOut(int dev_no, unsigned int amp);
+ 
++/**\brief 模拟get atv status
++ *\param dev_no 前端设备号
++ *\param atv_status ，单位为atv_status_t
++ * \return
++ *   - AM_SUCCESS 成功
++ *   - 其他值 错误代码(见am_fend.h)
++ */
++AM_ErrorCode_t AM_FEND_GetAtvStatus(int dev_no,  atv_status_t *atv_status);
++
+ #ifdef __cplusplus
+ }
+ #endif
