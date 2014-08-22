@@ -21,6 +21,9 @@ LOCAL_MODULE:= libhdiapi
 
 LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/include/tcl/ \
+    $(LOCAL_PATH)/include \
+    $(LOCAL_PATH)/../include/am_adp \
+    $(LOCAL_PATH)/../android/ndk/include/ \
     $(LOCAL_PATH)/../../../vendor/amlogic/dvb/include/am_adp \
     $(LOCAL_PATH)/../../../vendor/amlogic/dvb/android/ndk/include \
     $(LOCAL_PATH)/../../../vendor/amlogic/dvb/android/ndk/include/linux
